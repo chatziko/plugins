@@ -403,13 +403,31 @@
 }
 
 - (bool)loadUrl:(NSString*)url withHeaders:(NSDictionary<NSString*, NSString*>*)headers {
-  NSURL* nsUrl = [NSURL URLWithString:url];
-  if (!nsUrl) {
-    return false;
+
+  if ([url rangeOfString:@"file://"].location == NSNotFound) {
+    // remote URL
+    NSURL* nsUrl = [NSURL URLWithString:url];
+    if (!nsUrl) {
+      return false;
+    }
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:nsUrl];
+    [request setAllHTTPHeaderFields:headers];
+    [_webView loadRequest:request];
+
+  } else {
+    // file:// URL
+    if (!@available(iOS 9.0, *)) {
+      @throw @"not available on version earlier than ios 9.0";
+    }
+
+    NSURL *nsUrl = [NSURL fileURLWithPath:url isDirectory:false];
+
+    NSString *dir = [url stringByDeletingLastPathComponent];
+    NSURL *nsDir = [NSURL fileURLWithPath:dir isDirectory:true];
+
+    [_webView loadFileURL:nsUrl allowingReadAccessToURL:nsDir];
   }
-  NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:nsUrl];
-  [request setAllHTTPHeaderFields:headers];
-  [_webView loadRequest:request];
+  
   return true;
 }
 
