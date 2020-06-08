@@ -420,9 +420,11 @@
       @throw @"not available on version earlier than ios 9.0";
     }
 
-    NSURL *nsUrl = [NSURL fileURLWithPath:url isDirectory:false];
+    // in iOS 13 we _need_ a fs path (no "file://") in NSURL
+    NSString *path = [url substringFromIndex:7];
+    NSURL *nsUrl = [NSURL fileURLWithPath:path isDirectory:false];
 
-    NSString *dir = [url stringByDeletingLastPathComponent];
+    NSString *dir = [path stringByDeletingLastPathComponent];
     NSURL *nsDir = [NSURL fileURLWithPath:dir isDirectory:true];
 
     [_webView loadFileURL:nsUrl allowingReadAccessToURL:nsDir];
